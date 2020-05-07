@@ -1,3 +1,5 @@
+import copy
+import os
 import subprocess
 from functools import lru_cache
 
@@ -11,6 +13,9 @@ IR2GRAPH = {
 # THe binary used for converting ProgramGraph protocol buffers to graphviz
 # dot strings.
 GRAPH2DOT = "bin/graph2dot"
+
+IR2GRAPH_ENV = copy.copy(os.environ)
+IR2GRAPH_ENV["LD_LIBRARY_PATH"] = "lib"
 
 
 def _BadRequest(message: str, **kwargs):
@@ -27,6 +32,7 @@ def _Ir2Graph(ir2graph: str, ir: str, version: str):
     stdout=subprocess.PIPE,
     stderr=subprocess.PIPE,
     universal_newlines=True,
+    env=IR2GRAPH_ENV,
   )
   stdout, stderr = p.communicate(ir)
   if p.returncode:
