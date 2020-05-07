@@ -3,19 +3,25 @@ import os
 import subprocess
 from functools import lru_cache
 
+# The directory of the root of this project.
+_ROOR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+BIN_DIR = os.environ.get("PROGRAM_EXPLORER_BIN", f"{_ROOR_DIR}/bin")
+LIB_DIR = os.environ.get("PROGRAM_EXPLORER_LIB", f"{_ROOR_DIR}/lib")
+
 # The binaries used for creating ProgramGraph protocol buffers from compiler
 # IRs. Keyed by the IR type.
 IR2GRAPH = {
-  "LLVM 6.0.0": "bin/llvm2graph",
-  "XLA HLO": "bin/xla2graph",
+  "LLVM 6.0.0": f"{BIN_DIR}/llvm2graph",
+  "XLA HLO": f"{BIN_DIR}/xla2graph",
 }
 
 # THe binary used for converting ProgramGraph protocol buffers to graphviz
 # dot strings.
-GRAPH2DOT = "bin/graph2dot"
+GRAPH2DOT = f"{BIN_DIR}/graph2dot"
 
 IR2GRAPH_ENV = copy.copy(os.environ)
-IR2GRAPH_ENV["LD_LIBRARY_PATH"] = "lib"
+IR2GRAPH_ENV["LD_LIBRARY_PATH"] = LIB_DIR
 
 
 def _BadRequest(message: str, **kwargs):
