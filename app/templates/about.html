@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <h1>About</h1>
+      <p class="lead">
+        During the course of compiling a program, a compiler makes hundreds or even thousands of decisions about how to transform and optimize the code to give you the best performance. These decisions are made by heuristics which are painstakingly constructed and tuned by hand, but no heuristic is perfect. Machine learning offers the tremendous benefit of turning this tedious and error prone task into an automatic process in which heuristics are constructed by learning from past examples. In addition to being simpler to build, these machine learned heuristics often outperform hand tuned equivalents.
+      </p>
+      <p class="lead">
+        For a machine learning model to learn to reason about programs, it must be fed a suitable representation. Historically, representations of programs were constructed using ad-hoc analysis of programs to extract numeric feature vectors, but deciding which features to use is a laborious process which relies heavily on the time and expertise of the feature designer.
+      </p>
+      <p class="lead">
+        This site contains a tool to visualize <a href="https://chriscummins.cc/ProGraML">ProGraML</a>, a new graph-based representation of programs designed to capture both the attributes of a program's instructions, and the relations between them.
+      </p>
+      <div class="spacer"></div>
+      <h2>How to use Program Explorer</h2>
+      <ol>
+        <li>On the <a href="/">program explorer</a> page.</li>
+        <li>Select the compiler IR type that you are using.</li>
+        <li>Type, or copy, the compiler IR that you wish to visualize into the left pane.</li>
+        <li>The compiler IR that you enter is sent to this server and processed into a ProgramGraph protocol buffer. The protocol buffer is shown in the central pane.</li>
+        <li>The generated program graph is rendered into a Graphviz diagram on the right pane.</li>
+        <li>To share or save your work, click the "Shareable URL" button. This generates a unique URL for this IR. Opening this link will restore the compiler IR and visualization.</li>
+      </ol>
+      <div class="spacer"></div>
+      <p class="text-center">
+        <a href="/" type="button" class="btn btn-success">Get Started!</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

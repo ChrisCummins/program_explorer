@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block header %}
+<style>
+  .explorer-col .header h2 {
+    display: inline-block;
+  }
+
+  .explorer-col .header .buttons {
+    float: right;
+  }
+
+  #pbtxt {
+    display: none;
+  }
+
+  #pbtxt-error .message {
+    white-space: pre;
+  }
+
+  #graph-error {
+    display: none;
+    white-space: pre;
+  }
+
+  #ir-editor {
+    border: 1px solid lightgray;
+    margin: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  #graph svg {
+    width: 100%;
+  }
+</style>
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.2/styles/default.min.css">
+{% endblock %}
+
+
+{% block body %}
+<div class="container-fluid">
+  <div class="row">
+    <div id="ir-col" class="explorer-col col-3">
+      <div class="header">
+        <h2>Compiler IR</h2>
+        <div class="buttons">
+          <button id="ir-download" type="button" class="btn btn-info" title="Download the IR file">
+            <i class="fa fa-download"></i>
+            Download
+          </button>
+        </div>
+      </div>
+      <div class="dropdown">
+        <form>
+          <div class="form-group">
+            <select id="ir-type" class="form-control" title="The compiler IR type">
+              <option>LLVM 6.0.0</option>
+              <option>XLA HLO</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="display">
+        <div>
+          <pre id="ir-editor">{{ data.ir }}</pre>
+        </div>
+      </div>
+    </div>
+    <div id="pbtxt-col" class="explorer-col col-3">
+      <div class="header">
+        <h2>ProGraML</h2>
+        <div class="buttons">
+          <button id="pbtxt-download" type="button" class="btn btn-info" title="Download the ProgramGraph protocol buffer">
+            <i class="fa fa-download"></i>
+            Download
+          </button>
+        </div>
+      </div>
+      <div class="dropdown">
+        <form>
+          <div class="form-group">
+            <select id="programl-version" class="form-control" title="The ProGraML version to use">
+              <option>ProGraML 2020.05.06</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="display">
+        <div id="pbtxt-loading" class="text-center">
+          <div class="spinner-border text-info" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+        </div>
+        <div id="pbtxt-error" class="alert alert-danger">
+          <i class="fa fa-exclamation-triangle"></i>
+          <span class="message"></span>
+        </div>
+        <pre><code id="pbtxt" class="language-protobuf"></code></pre>
+      </div>
+    </div>
+    <div id="graph-col" class="explorer-col col-6">
+      <div class="header">
+        <h2>Graph</h2>
+        <div class="buttons">
+          <button id="graph-download" type="button" class="btn btn-info" title="Download a Graphviz dot file">
+            <i class="fa fa-download"></i>
+            Download
+          </button>
+          <button id="share" type="button" class="btn btn-success" title="Copy a shareable URL of this page">
+            <i class="fa fa-share-alt"></i>
+            Shareable URL
+          </button>
+        </div>
+      </div>
+      <form>
+        <div class="form-group">
+          <select id="graph-select" class="form-control" title="The part of the program graph to visualize">
+            <option>Entire Program</option>
+          </select>
+        </div>
+      </form>
+      <div class="display">
+        <div id="graph-loading" class="text-center">
+          <div class="spinner-border text-info" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+        </div>
+        <div id="graph-error" class="alert alert-danger" role="alert"></div>
+        <div id="graph"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block footer %}
+<!-- Ace text edit -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ace.min.js"></script>
+<!-- Syntax highlighting -->
+<script src="{{ urls.highlight_js }}?v={{ urls.cache_tag }}"></script>
+<!-- Graphviz rendering -->
+<script src="//d3js.org/d3.v5.min.js"></script>
+<script src="https://unpkg.com/@hpcc-js/wasm@0.3.6/dist/index.min.js"></script>
+<script src="https://unpkg.com/d3-graphviz@3.0.0/build/d3-graphviz.js"></script>
+<!-- Event throttling -->
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js" integrity="sha256-VeNaFBVDhoX3H+gJ37DpT/nTuZTdjYro9yBruHjVmoQ=" crossorigin="anonymous"></script>
+<!-- Page -->
+<script src="{{ urls.explorer_js }}?v={{ urls.cache_tag }}"></script>
+{% endblock %}
