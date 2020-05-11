@@ -41,7 +41,7 @@ def _Ir2Graph(ir2graph: str, ir: str):
 # Dynamic dispatch table for <language, version, programl_version> translation to
 # binary path.
 IR2GRAPH = {}
-for lang in (BIN_DIR / "llvm2graph").iterdir():
+for lang in (BIN_DIR / "ir2graph").iterdir():
   if lang.name not in IR2GRAPH:
     IR2GRAPH[lang.name] = {}
   for version in lang.iterdir():
