@@ -9,15 +9,16 @@ var editor = ace.edit("ir-editor", {
 // Cache the current state of IR to compare against in event callbacks.
 var currentIrState = {
   "ir": null,
-  "type": null,
+  "lang": null,
   "version": null,
+  "programl_version": null,
 };
 
 // A map from IR type names to file suffixes, used to generate the file extension
 // for the "Download" button.
-var type2suffix = {
-  "LLVM 6.0.0": ".ll",
-  "XLA HLO": ".pbtxt",
+var lang2suffix = {
+  "llvm": ".ll",
+  "xla": ".pbtxt",
 }
 
 // The dot string for the currently rendered graph.
@@ -95,8 +96,9 @@ var OnIrChange = function() {
   var graph = $('#graph');
   var graph_loading = $('#graph-loading');
 
-  var ir_type = $('#ir-type').children("option:selected").val();
-  var version = $('#programl-version').children("option:selected").val();
+  var lang = $('#ir-type').children("option:selected").attr("data-lang");
+  var ir_version = $('#ir-type').children("option:selected").attr("data-version");
+  var programl_version = $('#programl-version').children("option:selected").attr("data-programl-version");
   var pbtxt = $('#pbtxt');
   var pbtxt_error = $('#pbtxt-error');
   var pbtxt_error_msg = $('#pbtxt-error .message');
@@ -108,11 +110,13 @@ var OnIrChange = function() {
   // re-rendering.
   var newIrState = {
     "ir": ir,
-    "type": ir_type,
-    "version": version,
+    "lang": lang,
+    "version": ir_version,
+    "programl_version": programl_version,
   }
-  if (currentIrState['type'] === newIrState['type'] &&
+  if (currentIrState['lang'] === newIrState['lang'] &&
     currentIrState['version'] === newIrState['version'] &&
+    currentIrState['programl_version'] === newIrState['programl_version'] &&
     currentIrState['ir'] === newIrState['ir']) {
     return;
   }
@@ -134,12 +138,12 @@ var OnIrChange = function() {
 
   $.ajax({
     type: "POST",
-    url: "/api/v1/ir2graph",
-    data: JSON.stringify(newIrState),
-    contentType: "application/json",
+    url: "/api/v1/ir2graph:" + programl_version + "/" + newIrState['lang'] + ":" + newIrState['version'],
+    data: ir,
+    contentType: "text/plain",
     success: function(response, status, obj) {
       pbtxt_loading.hide();
-      pbtxt.text(response['graph']);
+      pbtxt.text(response);
       hljs.highlightBlock(pbtxt.get(0));
       pbtxt.show();
       OnGraphChange();
@@ -147,13 +151,7 @@ var OnIrChange = function() {
     error: function(obj, err, exc) {
       pbtxt_loading.hide();
       graph_loading.hide();
-
-      response = JSON.parse(obj['responseText']);
-      if (response['error']) {
-        pbtxt_error_msg.text(response['error']);
-      } else {
-        pbtxt_error_msg.text(response["message"]);
-      }
+      pbtxt_error_msg.text(obj['responseText']);
       pbtxt_error.show();
     },
   });
@@ -168,17 +166,13 @@ var OnGraphChange = function() {
   graph.hide();
   graph_error.hide();
 
-  request = {
-    "graph": pbtxt,
-  }
-
   $.ajax({
     "type": "POST",
     "url": "/api/v1/graph2dot",
-    data: JSON.stringify(request),
-    contentType: "application/json",
+    data: pbtxt,
+    contentType: "text/plain",
     success: function(response, status, obj) {
-      dot = response['dot'];
+      dot = response;
       d3.select("#graph").graphviz().renderDot(dot);
       graph_loading.hide();
       graph.show();
@@ -186,12 +180,7 @@ var OnGraphChange = function() {
     error: function(obj, err, ex) {
       dot = ''
       pbtxt_loading.hide();
-      response = JSON.parse(obj['responseText']);
-      if (response['error']) {
-        graph_error.text(response['error']);
-      } else {
-        graph_error.text(response["message"])
-      }
+      graph_error.text(obj['responseText']);
       graph_error.show();
     }
   });
@@ -214,7 +203,7 @@ var OnLoad = function() {
   $('#ir-type').change(OnIrChange);
 
   $('#ir-download').click(function() {
-    DownloadText('program' + type2suffix[currentIrState['type']], editor.getValue());
+    DownloadText('program' + lang2suffix[currentIrState['type']], editor.getValue());
   });
   $('#pbtxt-download').click(function() {
     DownloadText('program.ProgramGraph.pbtxt', $('#pbtxt').text());

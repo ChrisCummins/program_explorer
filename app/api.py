@@ -1,37 +1,29 @@
 import copy
 import os
+import pathlib
 import subprocess
 from functools import lru_cache
 
 # The directory of the root of this project.
 _ROOR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-BIN_DIR = os.environ.get("PROGRAM_EXPLORER_BIN", f"{_ROOR_DIR}/bin")
-LIB_DIR = os.environ.get("PROGRAM_EXPLORER_LIB", f"{_ROOR_DIR}/lib")
-
-# The binaries used for creating ProgramGraph protocol buffers from compiler
-# IRs. Keyed by the IR type.
-IR2GRAPH = {
-  "LLVM 6.0.0": f"{BIN_DIR}/llvm2graph",
-  "XLA HLO": f"{BIN_DIR}/xla2graph",
-}
+BIN_DIR = pathlib.Path(
+  os.environ.get("PROGRAM_EXPLORER_BIN", f"{_ROOR_DIR}/bin")
+)
+LIB_DIR = pathlib.Path(
+  os.environ.get("PROGRAM_EXPLORER_LIB", f"{_ROOR_DIR}/lib")
+)
 
 # THe binary used for converting ProgramGraph protocol buffers to graphviz
 # dot strings.
 GRAPH2DOT = f"{BIN_DIR}/graph2dot"
 
 IR2GRAPH_ENV = copy.copy(os.environ)
-IR2GRAPH_ENV["LD_LIBRARY_PATH"] = LIB_DIR
-
-
-def _BadRequest(message: str, **kwargs):
-  d = {"message": message}
-  d.update(**kwargs)
-  return d, 400
+IR2GRAPH_ENV["LD_LIBRARY_PATH"] = str(LIB_DIR)
 
 
 @lru_cache(maxsize=256)
-def _Ir2Graph(ir2graph: str, ir: str, version: str):
+def _Ir2Graph(ir2graph: str, ir: str):
   p = subprocess.Popen(
     [ir2graph, "-"],
     stdin=subprocess.PIPE,
@@ -42,11 +34,34 @@ def _Ir2Graph(ir2graph: str, ir: str, version: str):
   )
   stdout, stderr = p.communicate(ir)
   if p.returncode:
-    return _BadRequest("Failed to construct graph from IR", error=stderr)
-  return {
-    "graph": stdout,
-    "message": "OK",
-  }
+    return stderr, 400
+  return stdout
+
+
+# Dynamic dispatch table for <language, version, programl_version> translation to
+# binary path.
+IR2GRAPH = {}
+for lang in (BIN_DIR / "llvm2graph").iterdir():
+  if lang.name not in IR2GRAPH:
+    IR2GRAPH[lang.name] = {}
+  for version in lang.iterdir():
+    if version.name not in IR2GRAPH[lang.name]:
+      IR2GRAPH[lang.name][version.name] = {}
+    for programl_version in version.iterdir():
+      IR2GRAPH[lang.name][version.name][
+        programl_version.name
+      ] = programl_version.absolute()
+
+
+def EnumerateIr2Graph(prefix: str = ""):
+  endpoints = []
+  for lang, versions in sorted(IR2GRAPH.items()):
+    endpoints.append(f"{prefix}/{lang}")
+    for version, programl_versions in sorted(versions.items()):
+      endpoints.append(f"{prefix}/{lang}:{version}")
+      for programl_version in sorted(programl_versions):
+        endpoints.append(f"{prefix}:{programl_version}/{lang}:{version}")
+  return "\n".join(endpoints) + "\n"
 
 
 @lru_cache(maxsize=256)
@@ -60,53 +75,35 @@ def _Graph2Dot(graph: str):
   )
   stdout, stderr = p.communicate(graph)
   if p.returncode:
-    return _BadRequest(
-      "Failed to create graphviz from ProGraML graph", error=stderr
-    )
-  return {
-    "dot": stdout,
-    "message": "OK",
-  }
+    return stderr, 400
+  return stdout
 
 
-def Ir2Graph(request):
+def Ir2Graph(programl_version: str, lang: str, version: str, ir: bytes):
   """Graph construction API endpoint.
 
   Args:
-    request: A JSON request object.
+    lang: The language to convert.
 
   Returns:
     A JSON response, optionally with an error code.
   """
-  ir: str = request.pop("ir")
-  if not ir:
-    return _BadRequest("Required argument missing: ir")
-  ir_type: str = request.pop("type")
-  if not ir_type:
-    return _BadRequest(
-      f'Required argument missing: type. Expected one of: {", ".join(sorted(IR2GRAPH.keys()))}'
+  if not lang in IR2GRAPH:
+    return "Unknown language", 400
+  if version not in IR2GRAPH[lang]:
+    return (
+      f"Unsupported language version: {version}. Expected one of: {', '.join(sorted(IR2GRAPH[lang]))}",
+      400,
     )
-
-  version: str = request.pop("version")
-  if not version:
-    return _BadRequest("Required argument missing: version")
-
-  if request:
-    return _BadRequest(f"Unknown arguments: {', '.join(sorted(request))}")
-
-  if version != "ProGraML 2020.05.06":
-    return _BadRequest(f"Unknown version: {version}")
-
-  ir2graph = IR2GRAPH.get(ir_type)
-  if not ir2graph:
-    return _BadRequest(
-      f"Unknown ir: {ir_type}. Expected one of: {', '.join(sorted(IR2GRAPH.keys()))}"
+  if programl_version not in IR2GRAPH[lang][version]:
+    return (
+      f"Unsupported ProGraML version: {version}. Expected one of: {', '.join(sorted(IR2GRAPH[lang][version]))}",
+      400,
     )
+  return _Ir2Graph(IR2GRAPH[lang][version][programl_version], ir)
 
-  return _Ir2Graph(ir2graph, ir, version)
 
-
-def Graph2Dot(request):
+def Graph2Dot(graph: str):
   """Graphviz dot construction API endpoint.
 
   Args:
@@ -115,8 +112,4 @@ def Graph2Dot(request):
   Returns:
     A JSON response, optionally with an error code.
   """
-  graph = request.get("graph")
-  if not graph:
-    return _BadRequest("Required argument missing: graph")
-
   return _Graph2Dot(graph)
