@@ -62,8 +62,13 @@
         <form>
           <div class="form-group">
             <select id="ir-type" class="form-control" title="The compiler IR type">
-              <option data-lang="llvm" data-version="6.0.0">LLVM 6.0.0</option>
-              <option data-lang="xla" data-version="default">XLA HLO</option>
+              {% for lang in data["endpoints"] | sort %}
+              {% for version in data["endpoints"][lang] | sort %}
+              <option {% if lang == data["defaults"]["lang"] and version == data["defaults"]["version"] %} selected{% endif %} data-lang="{{ lang }}" data-version="{{ version }}">
+                {{ lang }}/{{ version }}
+              </option>
+              {% endfor %}
+              {% endfor %}
             </select>
           </div>
         </form>
@@ -88,8 +93,9 @@
         <form>
           <div class="form-group">
             <select id="programl-version" class="form-control" title="The ProGraML version to use">
-              <option data-programl-version="2020.05.06">ProGraML 2020.05.06</option>
-              <option data-programl-version="2020.05.13">ProGraML 2020.05.13</option>
+              {% for programl_version in data["endpoints"][data["defaults"]["lang"]][data["defaults"]["version"]] %}
+              <option data-programl-version="{{ programl_version }}" {% if programl_version == data["defaults"]["programl_version"] %} selected{% endif %}>{{ programl_version }}</option>
+              {% endfor %}
             </select>
           </div>
         </form>
@@ -155,5 +161,12 @@
 <!-- Event throttling -->
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js" integrity="sha256-VeNaFBVDhoX3H+gJ37DpT/nTuZTdjYro9yBruHjVmoQ=" crossorigin="anonymous"></script>
 <!-- Page -->
+<script>
+  var ir2graph_api_endpoints = {
+    {
+      data["endpoints"] | safe
+    }
+  }
+</script>
 <script src="{{ urls.explorer_js }}?v={{ urls.cache_tag }}"></script>
 {% endblock %}

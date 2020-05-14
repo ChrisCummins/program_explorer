@@ -1,5 +1,6 @@
 import flask
 
+from app import api
 from app import explorer
 
 
@@ -30,10 +31,19 @@ define i32 @Fib(i32) local_unnamed_addr #0 {
 }
 """
 
+ENDPOINTS = api.EnumerateIr2GraphJson()
+
 
 def Explorer(urls):
   data = {
     "ir": DEFAULT_IR,
+    "endpoints": ENDPOINTS,
+    "defaults": {
+      "ir": DEFAULT_IR,
+      "lang": "llvm",
+      "version": "6.0.0",
+      "programl_version": "2020.05.06",
+    },
   }
   urls["highlight_js"] = flask.url_for("static", filename="highlight.pack.js")
   urls["explorer_js"] = flask.url_for("static", filename="explorer.js")

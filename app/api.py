@@ -64,6 +64,17 @@ def EnumerateIr2Graph(prefix: str = ""):
   return "\n".join(endpoints) + "\n"
 
 
+def EnumerateIr2GraphJson():
+  endpoints = {}
+  for lang, versions in IR2GRAPH.items():
+    endpoints[lang] = {}
+    for version, programl_versions in versions.items():
+      endpoints[lang][version] = []
+      for programl_version in programl_versions:
+        endpoints[lang][version].append(programl_version)
+  return endpoints
+
+
 @lru_cache(maxsize=256)
 def _Graph2Dot(graph: str):
   p = subprocess.Popen(

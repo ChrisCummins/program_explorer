@@ -32,7 +32,10 @@ def about():
 
 @app.route("/api/v1/ir2graph")
 def enumerate_ir2graph():
-  return api.EnumerateIr2Graph(prefix=request.url_rule)
+  if request.content_type == "application/json":
+    return api.EnumerateIr2GraphJson()
+  else:
+    return api.EnumerateIr2Graph(prefix=request.url_rule)
 
 
 @app.route(

@@ -50,8 +50,8 @@ var EncodeQueryData = function(data) {
 var AppStateToUri = function() {
   return EncodeQueryData({
     i: currentIrState['ir'],
-    t: currentIrState['type'],
-    v: currentIrState['version'],
+    t: $('#ir-type').children("option:selected").val(),
+    p: $('#programl-version').children("option:selected").val(),
     g: $('#graph-select').children("option:selected").val(),
   });
 }
@@ -63,7 +63,8 @@ var SetAppState = function(uri) {
   state = DecodeQueryData(uri);
   editor.setValue(state.i);
   $('#ir-type').val(state.t);
-  $('#programl-version').val(state.v);
+  OnLangChange();
+  $('#programl-version').val(state.p);
   $('#graph-select').val(state.g);
 }
 
@@ -90,14 +91,30 @@ var DecodeQueryData = function(uri) {
   return dictionary;
 }
 
+var OnLangChange = function() {
+  var ir_type = $('#ir-type').children("option:selected");
+
+  var lang = $('#ir-type').children("option:selected").attr("data-lang");
+  var version = $('#ir-type').children("option:selected").attr("data-version");
+
+  // Reset ProGraML version list.
+  var programl_version_selector = $('#programl-version');
+  programl_version_selector.empty();
+  ir2graph_api_endpoints[lang][version].forEach(function(item, index) {
+    var selected = item == "default" ? " selected " : ""
+    programl_version_selector.append("<option data-programl-version=\"" + item + "\"" + selected + ">" + item + "</option>");
+  });
+}
+
 var OnIrChange = function() {
   // DOM elements.
   var pbtxt_loading = $('#pbtxt-loading');
   var graph = $('#graph');
   var graph_loading = $('#graph-loading');
+  var ir_type = $('#ir-type').children("option:selected");
 
-  var lang = $('#ir-type').children("option:selected").attr("data-lang");
-  var ir_version = $('#ir-type').children("option:selected").attr("data-version");
+  var lang = ir_type.attr("data-lang");
+  var ir_version = ir_type.attr("data-version");
   var programl_version = $('#programl-version').children("option:selected").attr("data-programl-version");
   var pbtxt = $('#pbtxt');
   var pbtxt_error = $('#pbtxt-error');
@@ -200,7 +217,11 @@ var OnLoad = function() {
   // Throttle 
   $('#ir-editor').on('change keyup paste', _.throttle(OnIrChange, 1000));
 
-  $('#ir-type').change(OnIrChange);
+  $('#ir-type').change(function() {
+    OnLangChange();
+    OnIrChange();
+  });
+  $('#programl-version').change(OnIrChange);
 
   $('#ir-download').click(function() {
     DownloadText('program' + lang2suffix[currentIrState['type']], editor.getValue());
