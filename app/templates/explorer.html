@@ -162,11 +162,9 @@
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js" integrity="sha256-VeNaFBVDhoX3H+gJ37DpT/nTuZTdjYro9yBruHjVmoQ=" crossorigin="anonymous"></script>
 <!-- Page -->
 <script>
-  var ir2graph_api_endpoints = {
-    {
-      data["endpoints"] | safe
-    }
-  }
+  /* beautify ignore:start */
+var ir2graph_api_endpoints = {{ data["endpoints"] | safe }}
+/* beautify ignore:end */
 </script>
 <script src="{{ urls.explorer_js }}?v={{ urls.cache_tag }}"></script>
 {% endblock %}
