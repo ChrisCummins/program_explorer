@@ -75,7 +75,7 @@
       </div>
       <div class="display">
         <div>
-          <pre id="ir-editor">{{ data.ir }}</pre>
+          <pre id="ir-editor">{{ data.defaults.ir }}</pre>
         </div>
       </div>
     </div>
@@ -164,6 +164,7 @@
 <script>
   /* beautify ignore:start */
 var ir2graph_api_endpoints = {{ data["endpoints"] | safe }}
+var default_irs = {{ data["default_irs"] | safe }}
 /* beautify ignore:end */
 </script>
 <script src="{{ urls.explorer_js }}?v={{ urls.cache_tag }}"></script>

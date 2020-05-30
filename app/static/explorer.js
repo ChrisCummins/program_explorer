@@ -63,7 +63,7 @@ var SetAppState = function(uri) {
   state = DecodeQueryData(uri);
   editor.setValue(state.i);
   $('#ir-type').val(state.t);
-  OnLangChange();
+  OnLangChange(false);
   $('#programl-version').val(state.p);
   $('#graph-select').val(state.g);
 }
@@ -91,11 +91,20 @@ var DecodeQueryData = function(uri) {
   return dictionary;
 }
 
-var OnLangChange = function() {
+var OnLangChange = function(resetDefaultIr) {
   var ir_type = $('#ir-type').children("option:selected");
 
   var lang = $('#ir-type').children("option:selected").attr("data-lang");
   var version = $('#ir-type').children("option:selected").attr("data-version");
+
+  // We have switched from one IR language to another, e.g.
+  // from LLVM to XLA, so reset the IR text to the language
+  // default.
+  if (resetDefaultIr && lang != currentIrState['lang']) {
+    // Set the defualt IR to the current text so that a user can recover their text.
+    default_irs[currentIrState['lang']] = editor.getValue();
+    editor.setValue(default_irs[lang]);
+  }
 
   // Reset ProGraML version list.
   var programl_version_selector = $('#programl-version');
@@ -218,7 +227,7 @@ var OnLoad = function() {
   $('#ir-editor').on('change keyup paste', _.throttle(OnIrChange, 1000));
 
   $('#ir-type').change(function() {
-    OnLangChange();
+    OnLangChange(true);
     OnIrChange();
   });
   $('#programl-version').change(OnIrChange);
