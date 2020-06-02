@@ -2,8 +2,8 @@ hljs.initHighlightingOnLoad();
 
 var editor = ace.edit("ir-editor", {
   autoScrollEditorIntoView: true,
-  maxLines: 50,
-  minLines: 30
+  maxLines: 60,
+  minLines: 60
 });
 
 // Cache the current state of IR to compare against in event callbacks.
