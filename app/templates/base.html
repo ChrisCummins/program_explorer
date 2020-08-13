@@ -64,6 +64,15 @@
     </div>
   </footer>
   {% block footer %}{% endblock %}
+  {# Start Google Analytics. #}
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-40829804-2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-40829804-2');
+  </script>
+  {# End Google Analytics. #}
 </body>
 
 </html>
